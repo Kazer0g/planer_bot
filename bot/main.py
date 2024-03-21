@@ -1,6 +1,7 @@
 import asyncio
 import logging
-
+# TODO: Clean imports
+# TODO: Format code
 import src
 import keyboards
 import aiogram
@@ -19,9 +20,22 @@ router = Router()
 
 @router.message(Command(commands=[Commands.start.value]))
 async def start(msg: Message, state: FSMContext):
-    sqlite_db.add_user(id=msg.from_user.id, username=msg.from_user.username)
-    await msg.answer(text=f'Hello, {msg.from_user.username}', reply_markup=keyboards.main_menu(owner_id=msg.from_user.id))
+    sqlite_db.add_user(id=msg.from_user.id, username=msg.from_user.username, message_id = msg.message_id+1)
+    await msg.answer(text=BotMessages.lists.value, reply_markup=keyboards.lists_menu(msg.from_user.id))
+    await msg.delete()
 
+# * Lists
+@router.callback_query(F.data == Callbacks.add_new_list.value)
+async def add_new_list(clbck: CallbackQuery, state: FSMContext):
+    await state.set_state(state=States.set_list_name)
+    await clbck.bot.send_message(clbck.from_user.id, text=BotMessages.send_list_name.value)
+@router.message(States.set_list_name)
+async def set_list_name(msg: Message, state: FSMContext):
+    await msg.bot.delete_messages(chat_id=msg.from_user.id, message_ids=[i for i in range(msg.message_id-1, msg.message_id+1)])
+    sqlite_db.add_list(owner_id=msg.from_user.id, name=msg.text)
+    await msg.bot.edit_message_reply_markup(chat_id=msg.from_user.id, message_id=sqlite_db.get_message_id(id=msg.from_user.id), reply_markup=keyboards.lists_menu(msg.from_user.id)) 
+
+# * Tasks
 @router.callback_query(F.data == Callbacks.add_new_task.value)
 async def add_new_task(callback: CallbackQuery, state: FSMContext):
     await callback.message.answer(text='Введите задачу')
@@ -38,6 +52,7 @@ async def set_task_description(msg: Message, state: FSMContext):
     data = await state.get_data()
     data['description'] = msg.text
     await state.set_data(data)
+
 async def main():
     global dp, bot
     connect_db()

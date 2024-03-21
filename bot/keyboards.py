@@ -6,17 +6,22 @@ from aiogram.types import (
     ReplyKeyboardRemove
 )
 import sqlite_db
-from enums import Callbacks
-import json
+from enums import Callbacks, ButtonsText
 
-def main_menu(owner_id):
-    tasks = sqlite_db.get_tasks(owner_id)
-    inline_keyboard = [[InlineKeyboardButton(text='Добавить задачу', callback_data=Callbacks.add_new_task.value)]]
-    for task in tasks:
-        inline_keyboard.append([InlineKeyboardButton(text=task, callback_data=json.dumps({Callbacks.task.value: tasks.index(task)}))])
+def lists_menu(owner_id) -> InlineKeyboardMarkup:
+    inline_keyboard = [
+        [InlineKeyboardButton(text=ButtonsText.add_new_list.value, callback_data=Callbacks.add_new_list.value)],
+        [InlineKeyboardButton(text=ButtonsText.all_tasks.value, callback_data=Callbacks.all_tasks_list.value)]
+        ]
+    for list in sqlite_db.get_lists_ids(owner_id):
+        inline_keyboard.append(
+            [InlineKeyboardButton(text=sqlite_db.get_list_name(list[0]), callback_data=Callbacks.task.value)] # ! Incorrect CallbackData
+        )
     return InlineKeyboardMarkup(inline_keyboard=inline_keyboard)
+
 
 
 def task_menu(task_id):
     task = sqlite_db.get_task(task_id)
+    # TODO: Create task menu
     

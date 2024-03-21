@@ -3,7 +3,9 @@ import sqlite3
 
 db_path = 'bot/db.db'
 logging.basicConfig(level=logging.INFO)
-def connect_db():
+
+# * DB
+def connect_db() -> tuple[sqlite3.Connection, sqlite3.Cursor]:
     global conn, cursor
     logging.info('Connecting to SQLite...')
     conn = sqlite3.connect(database=db_path, check_same_thread=False)
@@ -11,21 +13,58 @@ def connect_db():
     logging.info('Connected to SQLite')
     return conn, cursor
 
-def add_user(id, username):
-    user_name = cursor.execute(
+def get_message_id(id) -> int:
+    cursor.execute(
+        "SELECT message_id FROM users WHERE id = ?",
+        (id,)
+    )
+    return cursor.fetchall()[0][0]
+
+# * Users
+def add_user(id, username, message_id):
+    data = cursor.execute(
         "SELECT username FROM users WHERE id = ?",
         (id,)
     ).fetchall()
-    if len(user_name) == 0:
+    if len(data) == 0:
+        if username == None:
+            username = 'Secret'
         cursor.execute(
-            "INSERT INTO users VALUES (?, ?)", 
-            (id, username)
+            "INSERT INTO users VALUES (?, ?, ?)", 
+            (id, username, message_id)
             )
-        conn.commit()
         logging.info(f'{username}:{id} added')
     else:
+        cursor.execute(
+            "UPDATE users SET message_id = ? WHERE id = ?",
+            (message_id, id)
+        )
         logging.info(f'{username}:{id} already exists')
+    conn.commit()
+# * Lists
+def add_list(owner_id, name):
+    cursor.execute(
+        "INSERT INTO lists (owner_id, name) VALUES (?, ?)",
+        (owner_id, name)
+    )
+    conn.commit()
+    logging.info(f"{name} list added, owner:{owner_id}")
 
+def get_lists_ids(owner_id):
+    cursor.execute(
+        "SELECT id FROM lists WHERE owner_id = ?",
+        (owner_id,)
+    )
+    return cursor.fetchall()
+
+def get_list_name(list_id) -> str:
+    cursor.execute(
+        "SELECT name FROM lists WHERE id = ?",
+        (list_id,)
+    )
+    return str(cursor.fetchall()[0][0])
+
+# * Tasks
 def add_task(owner_id, name, description='Нет описания', deadline='Нет дедлайна'):
     cursor.execute(
         "INSERT INTO tasks VALUES (?, ?, ?)",
