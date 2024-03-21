@@ -15,11 +15,18 @@ def lists_menu(owner_id) -> InlineKeyboardMarkup:
         ]
     for list in sqlite_db.get_lists_ids(owner_id):
         inline_keyboard.append(
-            [InlineKeyboardButton(text=sqlite_db.get_list_name(list[0]), callback_data=Callbacks.task.value)] # ! Incorrect CallbackData
+            [InlineKeyboardButton(text=sqlite_db.get_list_name(list[0]), callback_data=str(list[0]))]
         )
     return InlineKeyboardMarkup(inline_keyboard=inline_keyboard)
 
-
+def list_menu(list_id) -> InlineKeyboardMarkup:
+    inline_keyboard = [
+        [InlineKeyboardButton(text='Удалить список', callback_data=Callbacks.delete_list.value)]
+    ]
+    tasks = sqlite_db.get_tasks(list_id)
+    for task in tasks:
+        print (task)
+    return InlineKeyboardMarkup(inline_keyboard=inline_keyboard)
 
 def task_menu(task_id):
     task = sqlite_db.get_task(task_id)

@@ -50,6 +50,14 @@ def add_list(owner_id, name):
     conn.commit()
     logging.info(f"{name} list added, owner:{owner_id}")
 
+def delete_list(id):
+    cursor.execute(
+        "DELETE FROM lists WHERE id = ?",
+        (id,)
+    )
+    conn.commit()
+    logging.info(f"List {id} deleted")
+
 def get_lists_ids(owner_id):
     cursor.execute(
         "SELECT id FROM lists WHERE owner_id = ?",
@@ -63,6 +71,7 @@ def get_list_name(list_id) -> str:
         (list_id,)
     )
     return str(cursor.fetchall()[0][0])
+
 
 # * Tasks
 def add_task(owner_id, name, description='Нет описания', deadline='Нет дедлайна'):
@@ -82,7 +91,7 @@ def get_task(id):
 
 def get_tasks(id):
     cursor.execute(
-        "SELECT * FROM tasks WHERE owner_id = ?",
+        "SELECT * FROM tasks WHERE list_id = ?",
         (id,)
     )
     return cursor.fetchall()
