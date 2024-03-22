@@ -49,7 +49,6 @@ def add_list(owner_id, name):
     )
     conn.commit()
     logging.info(f"{name} list added, owner:{owner_id}")
-
 def delete_list(id):
     cursor.execute(
         "DELETE FROM lists WHERE id = ?",
@@ -57,14 +56,13 @@ def delete_list(id):
     )
     conn.commit()
     logging.info(f"List {id} deleted")
-
+    # TODO: delete all tasks
 def get_lists_ids(owner_id):
     cursor.execute(
         "SELECT id FROM lists WHERE owner_id = ?",
         (owner_id,)
     )
     return cursor.fetchall()
-
 def get_list_name(list_id) -> str:
     cursor.execute(
         "SELECT name FROM lists WHERE id = ?",
@@ -74,14 +72,13 @@ def get_list_name(list_id) -> str:
 
 
 # * Tasks
-def add_task(owner_id, name, description='Нет описания', deadline='Нет дедлайна'):
+def add_task(owner_id, list_id, name, description='Нет описания', deadline='Нет дедлайна'):
     cursor.execute(
-        "INSERT INTO tasks VALUES (?, ?, ?)",
-        (owner_id, description, deadline)
+        "INSERT INTO tasks (owner_id, list_id, name, description, deadline) VALUES (?, ?, ?, ?, ?)",
+        (owner_id, list_id, name, description, deadline)
     )
     conn.commit()
     logging.info(f"{name} task added, owner:{owner_id}, description:{description}, deadline:{deadline}")
-
 def get_task(id):
     cursor.execute(
         "SELECT * FROM tasks WHERE id = ?",

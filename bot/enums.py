@@ -29,6 +29,7 @@ class Callbacks(Enum):
 class States(StatesGroup):
     set_task_name = State()
     set_task_description = State()
+    set_task_deadline = State()
 
     lists = State()
     list = State()

@@ -69,20 +69,31 @@ async def lists(clbck: CallbackQuery, state: FSMContext):
 # * Tasks
 @router.callback_query(F.data == Callbacks.add_new_task.value)
 async def add_new_task(callback: CallbackQuery, state: FSMContext):
-    await callback.message.answer(text='Введите задачу')
+    await state.set_data({'list_id': callback.data})
     await state.set_state(States.set_task_name)
-
+    await callback.message.answer(text='Введите задачу')
 @router.message(States.set_task_name)
 async def set_task_name(msg: Message, state: FSMContext):
-    await state.set_data({'name':msg.text})
+    data = await state.get_data()
+    data['name'] = msg.text
+    await state.set_data(data)
     await state.set_state(States.set_task_description)
     await msg.answer(text='Введите описание задачи')
-
 @router.message(States.set_task_description)
 async def set_task_description(msg: Message, state: FSMContext):
     data = await state.get_data()
     data['description'] = msg.text
     await state.set_data(data)
+    await state.set_state(States.set_task_deadline)
+    await msg.answer(text='Введите дедлайн задачи')
+@router.message(States.set_task_deadline)
+async def set_task_deadline(msg: Message, state: FSMContext):
+    data = await state.get_data()
+    data['deadline'] = msg.text
+    sqlite_db.add_task(owner_id=msg.from_user.id, list_id=data['list_id'], name=data['name'], description=data['description'], deadline=data['deadline'])
+    await msg.answer(text=BotMessages.lists.value, reply_markup=keyboards.list_menu(data['list_id']))
+    await state.set_state(States.list)
+    await state.set_data({'list': data['list_id']})
 
 async def main():
     global dp, bot
