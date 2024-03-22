@@ -8,6 +8,7 @@ from aiogram.types import (
 import sqlite_db
 from enums import Callbacks, ButtonsText
 
+# * InlineKeyboards
 def lists_menu(owner_id) -> InlineKeyboardMarkup:
     inline_keyboard = [
         [InlineKeyboardButton(text=ButtonsText.add_new_list.value, callback_data=Callbacks.add_new_list.value)],

@@ -15,6 +15,8 @@ class BotMessages(Enum):
 
 class Commands(Enum):
     start = 'start'
+    task = 'task'
+    home = 'home'
 
 class Callbacks(Enum):
     add_new_task = 'add_task'

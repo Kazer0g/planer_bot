@@ -18,18 +18,41 @@ from sqlite_db import connect_db
 
 router = Router()
 
+# * Commands
 @router.message(Command(commands=[Commands.start.value]))
 async def start(msg: Message, state: FSMContext):
     sqlite_db.add_user(id=msg.from_user.id, username=msg.from_user.username, message_id = msg.message_id+1)
-    await state.set_state(States.lists)
     await msg.answer(text=BotMessages.lists.value, reply_markup=keyboards.lists_menu(msg.from_user.id))
     await msg.delete()
+    await state.set_state(States.lists)
+
+@router.message(Command(commands=[Commands.task.value]))
+async def task(msg: Message, state: FSMContext):
+    pass
+
+@router.message(Command(commands=[Commands.home.value]))
+async def home(msg: Message, state: FSMContext):
+    await msg.answer(text=BotMessages.lists.value, reply_markup=keyboards.lists_menu(msg.from_user.id))
+    await state.set_state(States.lists)
+
+# @router.message(Command(commands=[Commands.help.value]))
+# async def help(msg: Message, state: FSMContext):
+#     pass # TODO: Create help message
+#     # await msg.answer(text=BotMessages.help.value)
 
 # * Lists
 @router.callback_query(F.data == Callbacks.add_new_list.value)
 async def add_new_list(clbck: CallbackQuery, state: FSMContext):
     await state.set_state(state=States.set_list_name)
     await clbck.bot.send_message(clbck.from_user.id, text=BotMessages.send_list_name.value)
+@router.callback_query(F.data == Callbacks.delete_list.value)
+async def delete_list(clbck: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    sqlite_db.delete_list(int(data['list']))
+    await state.set_data([])
+    await state.set_state(States.lists)
+    await clbck.bot.edit_message_text(chat_id=clbck.from_user.id, message_id=sqlite_db.get_message_id(id=clbck.from_user.id), text=BotMessages.lists.value)
+    await clbck.bot.edit_message_reply_markup(chat_id=clbck.from_user.id, message_id=sqlite_db.get_message_id(id=clbck.from_user.id), reply_markup=keyboards.lists_menu(clbck.from_user.id))
 @router.message(States.set_list_name)
 async def set_list_name(msg: Message, state: FSMContext):
     await msg.bot.delete_messages(chat_id=msg.from_user.id, message_ids=[i for i in range(msg.message_id-1, msg.message_id+1)])
@@ -42,14 +65,7 @@ async def lists(clbck: CallbackQuery, state: FSMContext):
     await state.set_data({'list': clbck.data})
     await clbck.bot.edit_message_text(message_id=sqlite_db.get_message_id(id=clbck.from_user.id), chat_id=clbck.from_user.id, text=sqlite_db.get_list_name(int(clbck.data)))
     await clbck.bot.edit_message_reply_markup(message_id=sqlite_db.get_message_id(id=clbck.from_user.id), chat_id=clbck.from_user.id, reply_markup=keyboards.list_menu(int(clbck.data))) # TODO: list markup
-@router.callback_query(F.data == Callbacks.delete_list.value)
-async def delete_list(clbck: CallbackQuery, state: FSMContext):
-    data = await state.get_data()
-    sqlite_db.delete_list(int(data['list']))
-    await clbck.bot.edit_message_reply_markup(chat_id=clbck.from_user.id, message_id=sqlite_db.get_message_id(id=clbck.from_user.id), reply_markup=keyboards.lists_menu(clbck.from_user.id))
-    await clbck.bot.edit_message_text(chat_id=clbck.from_user.id, message_id=sqlite_db.get_message_id(id=clbck.from_user.id), text=BotMessages.lists.value)
-    await state.clear()
-    await state.set_state(States.lists)
+
 # * Tasks
 @router.callback_query(F.data == Callbacks.add_new_task.value)
 async def add_new_task(callback: CallbackQuery, state: FSMContext):
