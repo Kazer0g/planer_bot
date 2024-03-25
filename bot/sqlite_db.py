@@ -86,9 +86,16 @@ def get_task(id):
     )
     return cursor.fetchall()
 
-def get_tasks(id):
+def get_tasks(id) -> list:
     cursor.execute(
         "SELECT * FROM tasks WHERE list_id = ?",
         (id,)
     )
     return cursor.fetchall()
+
+def get_task_name (id) -> str:
+    cursor.execute(
+        "SELECT name FROM tasks WHERE id = ?",
+        (id,)
+    )
+    return str(cursor.fetchall()[0][0])

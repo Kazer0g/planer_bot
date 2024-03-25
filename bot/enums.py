@@ -22,6 +22,9 @@ class Callbacks(Enum):
     add_new_task = 'add_task'
     task = 'task'
 
+    back_to_list = 'back_to_list'
+    back_to_lists = 'back_to_lists'
+
     add_new_list = 'add_new_list'
     delete_list = 'delete_list'
     all_tasks_list = 'all_tasks_list'
@@ -30,6 +33,7 @@ class States(StatesGroup):
     set_task_name = State()
     set_task_description = State()
     set_task_deadline = State()
+    task = State()
 
     lists = State()
     list = State()
