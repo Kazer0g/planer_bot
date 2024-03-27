@@ -26,7 +26,7 @@ def list_menu(list_id) -> InlineKeyboardMarkup:
         [InlineKeyboardButton(text=ButtonsText.delete_list.value, callback_data=Callbacks.delete_list.value)],
         [InlineKeyboardButton(text=ButtonsText.add_new_task.value, callback_data=Callbacks.add_new_task.value)]
     ]
-    tasks = sqlite_db.get_tasks(list_id)
+    tasks = list(sorted(sqlite_db.get_tasks(list_id), key=lambda x: x[5]))
     for task in tasks:
         inline_keyboard.append(
             [InlineKeyboardButton(text=task[5], callback_data=str(task[0])),
@@ -38,6 +38,10 @@ def task_menu(task_id) -> InlineKeyboardMarkup:
     task = sqlite_db.get_task(task_id)
     inlinekeyboard = [
         [InlineKeyboardButton(text=ButtonsText.back.value, callback_data=Callbacks.back_to_list.value)],
+        # [InlineKeyboardButton(text=ButtonsText.edit_task.value, callback_data=Callbacks.edit_task.value),
+        [InlineKeyboardButton(text=ButtonsText.delete_task.value, callback_data=Callbacks.delete_task.value)],
+        [InlineKeyboardButton(text=task[5], callback_data=Callbacks.deadline.value)],
+        [InlineKeyboardButton(text=task[4], callback_data=Callbacks.description.value)]
     ]   
 
     return InlineKeyboardMarkup(inline_keyboard=inlinekeyboard) 

@@ -84,7 +84,7 @@ def get_task(id):
         "SELECT * FROM tasks WHERE id = ?",
         (id,)
     )
-    return cursor.fetchall()
+    return cursor.fetchall()[0]
 
 def get_tasks(id) -> list:
     cursor.execute(
@@ -106,3 +106,25 @@ def reminder(date, time):
         (date + ' ' + time,)
     )
     return cursor.fetchall()
+
+def update_task_description(id, description):
+    cursor.execute(
+        "UPDATE tasks SET description = ? WHERE id = ?",
+        (description, id)
+    )
+    conn.commit()
+
+def update_task_deadline(id, deadline):
+    cursor.execute(
+        "UPDATE tasks SET deadline = ? WHERE id = ?",
+        (deadline, id)
+    )
+    conn.commit()
+
+def delete_task(id):
+    cursor.execute(
+        "DELETE FROM tasks WHERE id = ?",
+        (id,)
+    )
+    conn.commit()
+    logging.info(f"Task {id} deleted")

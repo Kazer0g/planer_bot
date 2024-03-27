@@ -27,10 +27,6 @@ async def start(msg: Message, state: FSMContext):
     await msg.delete()
     await state.set_state(States.lists)
 
-@router.message(Command(commands=[Commands.task.value]))
-async def task(msg: Message, state: FSMContext):
-    pass
-
 # @router.message(Command(commands=[Commands.help.value]))
 # async def help(msg: Message, state: FSMContext):
 #     pass # TODO: Create help message
@@ -45,7 +41,6 @@ async def add_new_list(clbck: CallbackQuery, state: FSMContext):
 async def delete_list(clbck: CallbackQuery, state: FSMContext):
     await clbck.bot.send_message(clbck.from_user.id, text=BotMessages.accept_deleting_list.value, reply_markup=keyboards.accept_deleting())
     await state.set_state(state=States.deleting_list)
-
 @router.callback_query(States.deleting_list)
 async def deleting_list(clbck: CallbackQuery, state: FSMContext):
     if clbck.data == Callbacks.accept.value:
@@ -71,26 +66,22 @@ async def lists(clbck: CallbackQuery, state: FSMContext):
     await state.set_data({DataNames.list_id.value: clbck.data})
     await clbck.bot.edit_message_text(message_id=sqlite_db.get_message_id(id=clbck.from_user.id), chat_id=clbck.from_user.id, text=sqlite_db.get_list_name(int(clbck.data)))
     await clbck.bot.edit_message_reply_markup(message_id=sqlite_db.get_message_id(id=clbck.from_user.id), chat_id=clbck.from_user.id, reply_markup=keyboards.list_menu(int(clbck.data))) # TODO: list markup
-
 @router.callback_query(F.data == Callbacks.back_to_lists.value)
 async def back_to_lists(clbck: CallbackQuery, state: FSMContext):
     await state.set_state(state=States.lists)
     await clbck.bot.edit_message_text(chat_id=clbck.from_user.id, message_id=sqlite_db.get_message_id(id=clbck.from_user.id), text=BotMessages.lists.value)
     await clbck.bot.edit_message_reply_markup(chat_id=clbck.from_user.id, message_id=sqlite_db.get_message_id(id=clbck.from_user.id), reply_markup=keyboards.lists_menu(clbck.from_user.id))
-
 @router.callback_query(F.data == Callbacks.add_new_task.value)
 async def add_new_task(callback: CallbackQuery, state: FSMContext):
     data  = await state.get_data()
     await state.set_data({DataNames.list_id.value: data[DataNames.list_id.value]})
     await state.set_state(States.set_task_name)
     await callback.message.answer(text=BotMessages.set_task_name.value)
-
 @router.callback_query(States.list)
 async def tasks(clbck: CallbackQuery, state: FSMContext):
     await state.set_state(States.task)
     data = await state.get_data()
     data[DataNames.task_id.value] = clbck.data
-    print (clbck.data)
     await state.set_data({DataNames.task_id.value: clbck.data, DataNames.list_id.value: data[DataNames.list_id.value]})
     await clbck.bot.edit_message_text(message_id=sqlite_db.get_message_id(id=clbck.from_user.id), chat_id=clbck.from_user.id, text=sqlite_db.get_task_name(int(data[DataNames.task_id.value])))
     await clbck.bot.edit_message_reply_markup(message_id=sqlite_db.get_message_id(id=clbck.from_user.id), chat_id=clbck.from_user.id, reply_markup=keyboards.task_menu(int(data[DataNames.task_id.value])))
@@ -109,7 +100,7 @@ async def set_task_description(msg: Message, state: FSMContext):
     data[DataNames.description.value] = msg.text
     await state.set_data(data)
     await state.set_state(States.set_task_deadline)
-    await msg.answer(text=BotMessages.set_task_description.value)
+    await msg.answer(text=BotMessages.set_task_deadline.value)
 @router.message(States.set_task_deadline)
 async def set_task_deadline(msg: Message, state: FSMContext):
     data = await state.get_data()
@@ -123,14 +114,43 @@ async def set_task_deadline(msg: Message, state: FSMContext):
         await state.set_data({DataNames.list_id.value: data[DataNames.list_id.value]})
     else:
         pass
-
 @router.callback_query(F.data == Callbacks.back_to_list.value)
 async def back_to_list(clbck: CallbackQuery, state: FSMContext):
     data = await state.get_data() 
     await state.set_state(States.list)
     await clbck.bot.edit_message_text(chat_id=clbck.from_user.id, message_id=sqlite_db.get_message_id(id=clbck.from_user.id), text=sqlite_db.get_list_name(data['list_id']))
     await clbck.bot.edit_message_reply_markup(chat_id=clbck.from_user.id, message_id=sqlite_db.get_message_id(id=clbck.from_user.id), reply_markup=keyboards.list_menu(data['list_id']))
-
+@router.callback_query(F.data == Callbacks.description.value)
+async def description(clbck: CallbackQuery, state: FSMContext):
+    await state.set_state(States.change_task_description)
+    await clbck.bot.send_message(chat_id=clbck.from_user.id, text=BotMessages.set_task_description.value)
+@router.message(States.change_task_description)
+async def change_task_description(msg: Message, state: FSMContext):
+    data = await state.get_data()
+    sqlite_db.update_task_description(id=data[DataNames.task_id.value], description=msg.text)
+    await msg.bot.delete_messages(chat_id=msg.from_user.id, message_ids=[i for i in range(msg.message_id-1, msg.message_id+1)])
+    await msg.bot.edit_message_text(chat_id=msg.from_user.id, message_id=sqlite_db.get_message_id(id=msg.from_user.id), text=sqlite_db.get_task_name(data[DataNames.task_id.value]))
+    await msg.bot.edit_message_reply_markup(chat_id=msg.from_user.id, message_id=sqlite_db.get_message_id(id=msg.from_user.id), reply_markup=keyboards.task_menu(data[DataNames.task_id.value]))
+    await state.set_state(States.task)
+@router.callback_query(F.data == Callbacks.deadline.value)
+async def deadline(clbck: CallbackQuery, state: FSMContext):
+    await state.set_state(States.change_task_deadline)
+    await clbck.bot.send_message(chat_id=clbck.from_user.id, text=BotMessages.set_task_deadline.value)
+@router.message(States.change_task_deadline)
+async def change_task_deadline(msg: Message, state: FSMContext):
+    data = await state.get_data()
+    sqlite_db.update_task_deadline(id=data[DataNames.task_id.value], deadline=msg.text)
+    await msg.bot.delete_messages(chat_id=msg.from_user.id, message_ids=[i for i in range(msg.message_id-1, msg.message_id+1)])
+    await msg.bot.edit_message_text(chat_id=msg.from_user.id, message_id=sqlite_db.get_message_id(id=msg.from_user.id), text=sqlite_db.get_task_name(data[DataNames.task_id.value]))
+    await msg.bot.edit_message_reply_markup(chat_id=msg.from_user.id, message_id=sqlite_db.get_message_id(id=msg.from_user.id), reply_markup=keyboards.task_menu(data[DataNames.task_id.value]))
+    await state.set_state(States.task)
+@router.callback_query(F.data == Callbacks.delete_task.value)
+async def delete_task(clbck: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    sqlite_db.delete_task(id=data[DataNames.task_id.value])
+    await clbck.bot.edit_message_text(chat_id=clbck.from_user.id, message_id=clbck.message.message_id, text=sqlite_db.get_list_name(data[DataNames.list_id.value]))
+    await clbck.bot.edit_message_reply_markup(chat_id=clbck.from_user.id, message_id=clbck.message.message_id, reply_markup=keyboards.list_menu(data[DataNames.list_id.value]))
+    await state.set_state(States.list)
 async def reminder(tasks):
     if len(tasks) == 0:
         pass
@@ -138,14 +158,11 @@ async def reminder(tasks):
         print (tasks)
         for task in tasks:
             await bot.send_message(chat_id=task[1], text=task[3], reply_markup=keyboards.task(task[0], ))
-
 def date_validator(date):
     return True
 # TODO : date validator
-
 async def check_time():
     return datetime.now()
-
 async def checker():
     await asyncio.sleep(60 - datetime.now().time().second)
     logging.info('Timer started')
@@ -155,7 +172,6 @@ async def checker():
         date = date_time.strftime("%d.%m.%Y")
         await reminder(sqlite_db.reminder(date, time))
         await asyncio.sleep(60)
-
 async def main():
     global dp, bot
     connect_db()

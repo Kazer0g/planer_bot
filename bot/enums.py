@@ -8,22 +8,24 @@ class ButtonsText(Enum):
     delete_list = 'Удалить список ❌'
 
     add_new_task = 'Добавить задачу ✅'
+    edit_task = 'Изменить задачу ✏️'
+    delete_task = 'Удалить задачу ❌'
     all_tasks = 'Все задачи'
 
-    done = 'Выполнено ✔️'
-    reschedule = 'Перенести '
+    done = 'Выполнено ✅'
+    reschedule = 'Перенести 📆'
 
     yes = 'Да'
     no = 'Нет'
 
-    back = 'Назад ⬅'
+    back = '⬅ Назад'
 
 class BotMessages(Enum):
     bot_description = 'My name is margo...' # TODO: Add description
 
     set_task_name = 'Введите задачу'
     set_task_description = 'Введите описание задачи'
-    set_task_deadline = 'Введите дедлайн задачи DD.MM.YYYY hh.mm.ss'
+    set_task_deadline = 'Введите дедлайн задачи DD.MM.YYYY HH:MM:SS'
 
     lists = 'Списки задач 📋'
     send_list_name = 'Введите название списка'
@@ -47,10 +49,15 @@ class Callbacks(Enum):
     add_new_list = 'add_new_list'
     delete_list = 'delete_list'
     all_tasks_list = 'all_tasks_list'
+    deadline = 'deadline'
+    description = 'description'
+
+    edit_task = 'edit_task'
+    delete_task = 'delete_task'
 
     accept = 'accept'
     cancel = 'cancel'
-    
+
 class DataNames(Enum):
     list_id = 'list_id'
     task_id = 'task_id'
@@ -61,7 +68,9 @@ class DataNames(Enum):
 class States(StatesGroup):
     set_task_name = State()
     set_task_description = State()
+    change_task_description = State()
     set_task_deadline = State()
+    change_task_deadline = State()
     task = State()
 
     lists = State()
