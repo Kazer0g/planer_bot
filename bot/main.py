@@ -157,6 +157,8 @@ async def reminder(tasks):
     else:
         print (tasks)
         for task in tasks:
+            # TODO : replace messages (from bottom to top)
+            # TODO : updating time (place )
             await bot.send_message(chat_id=task[1], text=task[3], reply_markup=keyboards.task(task[0], ))
 def date_validator(date):
     return True
