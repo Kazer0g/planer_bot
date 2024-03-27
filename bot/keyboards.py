@@ -22,21 +22,38 @@ def lists_menu(owner_id) -> InlineKeyboardMarkup:
 
 def list_menu(list_id) -> InlineKeyboardMarkup:
     inline_keyboard = [
-        [InlineKeyboardButton(text='Назад', callback_data=Callbacks.back_to_lists.value)],
-        [InlineKeyboardButton(text='Удалить список', callback_data=Callbacks.delete_list.value)],
-        [InlineKeyboardButton(text='Добавить задачу', callback_data=Callbacks.add_new_task.value)]
+        [InlineKeyboardButton(text=ButtonsText.back.value, callback_data=Callbacks.back_to_lists.value)],
+        [InlineKeyboardButton(text=ButtonsText.delete_list.value, callback_data=Callbacks.delete_list.value)],
+        [InlineKeyboardButton(text=ButtonsText.add_new_task.value, callback_data=Callbacks.add_new_task.value)]
     ]
     tasks = sqlite_db.get_tasks(list_id)
     for task in tasks:
         inline_keyboard.append(
-            [InlineKeyboardButton(text=task[3], callback_data=str(task[0]))]
+            [InlineKeyboardButton(text=task[5], callback_data=str(task[0])),
+             InlineKeyboardButton(text=task[3], callback_data=str(task[0]))]
         )
     return InlineKeyboardMarkup(inline_keyboard=inline_keyboard)
 
-def task_menu(task_id):
+def task_menu(task_id) -> InlineKeyboardMarkup:
     task = sqlite_db.get_task(task_id)
     inlinekeyboard = [
-        [InlineKeyboardButton(text='Назад', callback_data=Callbacks.back_to_list.value)],
+        [InlineKeyboardButton(text=ButtonsText.back.value, callback_data=Callbacks.back_to_list.value)],
     ]   
 
     return InlineKeyboardMarkup(inline_keyboard=inlinekeyboard) 
+
+def task(task_id) -> InlineKeyboardMarkup:
+    task = sqlite_db.get_task(task_id)
+    inlinekeyboard = [
+        [InlineKeyboardButton(text=ButtonsText.done.value, callback_data=Callbacks.done.value),
+         InlineKeyboardButton(text=ButtonsText.reschedule.value, callback_data=Callbacks.reschedule.value)],
+    ]   
+
+    return InlineKeyboardMarkup(inline_keyboard=inlinekeyboard)
+
+def accept_deleting() -> InlineKeyboardMarkup:
+    inlinekeyboard=[
+        [InlineKeyboardButton(text=ButtonsText.yes.value, callback_data=Callbacks.accept.value),
+         InlineKeyboardButton(text=ButtonsText.no.value, callback_data=Callbacks.cancel.value)],
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=inlinekeyboard)

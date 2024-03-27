@@ -99,3 +99,10 @@ def get_task_name (id) -> str:
         (id,)
     )
     return str(cursor.fetchall()[0][0])
+
+def reminder(date, time):
+    cursor.execute(
+        "SELECT * FROM tasks WHERE deadline = ?",
+        (date + ' ' + time,)
+    )
+    return cursor.fetchall()
